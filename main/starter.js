@@ -8,6 +8,7 @@ const rl = readline.createInterface({
   output: process.stdout
 })
 
+// ANSI color codes
 const bold = '\x1b[1m'
 const green = '\x1b[32m'
 const red = '\x1b[31m'
@@ -15,10 +16,7 @@ const yellow = '\x1b[33m'
 const reset = '\x1b[0m'
 
 function question(query) {
-  return new Promise(resolve => {
-    process.stdout.write(`${bold}${query}${reset}`)
-    rl.question('', resolve)
-  })
+  return new Promise(resolve => rl.question(`${bold}${query}${reset}`, resolve))
 }
 
 function validateSessionId(sessionId) {
@@ -58,6 +56,8 @@ async function getSessionId() {
 }
 
 async function getOwnerNumber() {
+  console.log(`${bold}Enter your OWNER NUMBER to continue${reset}\n`)
+  
   while (true) {
     const input = await question('OWNER_NUMBER: ')
     const result = validateOwnerNumber(input)
