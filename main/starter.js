@@ -8,7 +8,6 @@ const rl = readline.createInterface({
   output: process.stdout
 })
 
-// ANSI color codes
 const bold = '\x1b[1m'
 const green = '\x1b[32m'
 const red = '\x1b[31m'
@@ -95,10 +94,12 @@ function moveFilesToRoot(srcDir, destDir) {
 
 async function setup() {
   try {
-    console.log(`${bold}Enter your session ID to continue${reset}\n`)
+    const sessionId = process.env.KORD_SESSION || await (async () => {
+      console.log(`${bold}Enter your session ID to continue${reset}\n`)
+      return await getSessionId()
+    })()
     
-    const sessionId = await getSessionId()
-    const ownerNumber = await getOwnerNumber()
+    const ownerNumber = process.env.KORD_OWNER || await getOwnerNumber()
     
     rl.close()
     
