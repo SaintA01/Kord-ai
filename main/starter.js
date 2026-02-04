@@ -94,12 +94,21 @@ function moveFilesToRoot(srcDir, destDir) {
 
 async function setup() {
   try {
-    const sessionId = process.env.KORD_SESSION || await (async () => {
-      console.log(`${bold}Enter your session ID to continue${reset}\n`)
-      return await getSessionId()
-    })()
+    let sessionId = process.env.KORD_SESSION
+    let ownerNumber = process.env.KORD_OWNER
     
-    const ownerNumber = process.env.KORD_OWNER || await getOwnerNumber()
+    if (!sessionId || !sessionId.startsWith('kord_ai-')) {
+      console.log(`${bold}Enter your session ID to continue${reset}\n`)
+      sessionId = await getSessionId()
+    } else {
+      console.log(`${green}Using session ID from environment${reset}`)
+    }
+    
+    if (!ownerNumber || !/^\d{10,15}$/.test(ownerNumber)) {
+      ownerNumber = await getOwnerNumber()
+    } else {
+      console.log(`${green}Using owner number from environment${reset}`)
+    }
     
     rl.close()
     
