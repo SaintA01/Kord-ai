@@ -14,6 +14,8 @@ const red = '\x1b[31m'
 const yellow = '\x1b[33m'
 const reset = '\x1b[0m'
 
+const CREDS_FILE = '/tmp/kord_creds.json'
+
 function question(query) {
   return new Promise(resolve => rl.question(`${bold}${query}${reset}`, resolve))
 }
@@ -71,6 +73,29 @@ async function getOwnerNumber() {
   }
 }
 
+function loadStoredCreds() {
+  try {
+    if (fs.existsSync(CREDS_FILE)) {
+      const data = fs.readFileSync(CREDS_FILE, 'utf8')
+      return JSON.parse(data)
+    }
+  } catch {
+    return null
+  }
+  return null
+}
+
+function deleteStoredCreds() {
+  try {
+    if (fs.existsSync(CREDS_FILE)) {
+      fs.unlinkSync(CREDS_FILE)
+      console.log('Credentials file cleaned up')
+    }
+  } catch (err) {
+    console.log('Note: Could not delete credentials file')
+  }
+}
+
 function writeEnvFile(filePath, config) {
   const envText = Object.entries(config)
     .map(([key, value]) => `${key}=${value}`)
@@ -94,20 +119,18 @@ function moveFilesToRoot(srcDir, destDir) {
 
 async function setup() {
   try {
-    let sessionId = process.env.KORD_SESSION
-    let ownerNumber = process.env.KORD_OWNER
+    let sessionId, ownerNumber
     
-    if (!sessionId || !sessionId.startsWith('kord_ai-')) {
+    const storedCreds = loadStoredCreds()
+    
+    if (storedCreds && storedCreds.session && storedCreds.owner) {
+      console.log(`${green}Using saved credentials from WhatsApp${reset}\n`)
+      sessionId = storedCreds.session
+      ownerNumber = storedCreds.owner
+    } else {
       console.log(`${bold}Enter your session ID to continue${reset}\n`)
       sessionId = await getSessionId()
-    } else {
-      console.log(`${green}Using session ID from environment${reset}`)
-    }
-    
-    if (!ownerNumber || !/^\d{10,15}$/.test(ownerNumber)) {
       ownerNumber = await getOwnerNumber()
-    } else {
-      console.log(`${green}Using owner number from environment${reset}`)
     }
     
     rl.close()
@@ -135,6 +158,8 @@ async function setup() {
 
     console.log('Installing dependencies...')
     execSync('npm install', { stdio: 'inherit' })
+
+    deleteStoredCreds()
 
     console.log('Starting bot...')
     execSync('npm start', { stdio: 'inherit' })
